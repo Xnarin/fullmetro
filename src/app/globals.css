@@ -313,6 +313,12 @@ body {
   color: #6b7280;
 }
 
+.wait-badge {
+  font-size: 12px;
+  color: #ea580c;
+  font-weight: 500;
+}
+
 .not-visited {
   font-size: 13px;
   color: #9ca3af;

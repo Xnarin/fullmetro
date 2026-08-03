@@ -78,6 +78,11 @@ export default function PlaceCard({ place }: PlaceCardProps) {
                   <span className="rating-score">{place.rating.toFixed(1)}</span>
                 )}
               </div>
+              {(place.wait_minutes === 0 || place.wait_minutes) && (
+                <span className="wait-badge">
+                  ⏱ {place.wait_minutes === 0 ? '바로입장' : `웨이팅 ${place.wait_minutes}분`}
+                </span>
+              )}
               <span className="visit-count">(방문함)</span>
             </div>
           ) : (

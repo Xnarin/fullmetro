@@ -34,9 +34,26 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     '서울역': '🚄',
   };
 
-  const handleVisitToday = () => {
-    setIsVisited(true);
-    setVisitedToday(true);
+  const handleVisitToday = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const { error } = await supabase
+        .from('places')
+        .update({ last_visited: today })
+        .eq('id', place.id);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        alert('방문 체크 저장 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setIsVisited(true);
+      setVisitedToday(true);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('방문 체크 저장 중 오류가 발생했습니다.');
+    }
   };
 
   const handleSave = async () => {
