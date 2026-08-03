@@ -24,7 +24,7 @@ export default function PlaceCard({ place }: PlaceCardProps) {
       <div className="place-card">
         <div className="card-header">
           <div className="card-icon" style={{ backgroundColor: '#1e3a8a' }}>
-            <span style={{ fontSize: '24px' }}>🍽️</span>
+            <span style={{ fontSize: '18px' }}>🍽️</span>
           </div>
           <div className="card-title">
             <h3>{place.name}</h3>
