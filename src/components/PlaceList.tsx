@@ -19,9 +19,21 @@ export default function PlaceList({ places }: PlaceListProps) {
   const router = useRouter();
   const [selectedStation, setSelectedStation] = useState<StationType>('전체');
   const [selectedPrice, setSelectedPrice] = useState<PriceRangeType>('전체');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery('');
+  };
 
   const filtered = useMemo(() => {
     return places.filter((place) => {
+      // 검색어
+      if (searchQuery.trim() && !place.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) {
+        return false;
+      }
+
       // 역 필터
       if (selectedStation !== '전체' && place.station !== selectedStation) {
         return false;
@@ -37,7 +49,7 @@ export default function PlaceList({ places }: PlaceListProps) {
 
       return true;
     });
-  }, [places, selectedStation, selectedPrice]);
+  }, [places, searchQuery, selectedStation, selectedPrice]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -48,43 +60,37 @@ export default function PlaceList({ places }: PlaceListProps) {
     });
   }, [filtered]);
 
-  const unvisitedCount = sorted.filter((p) => !p.last_visited).length;
-
-  const handleRecommend = () => {
-    // 선택한 역에서 미방문 음식점 찾기
-    const available = selectedStation === '전체'
-      ? sorted.filter((p) => !p.last_visited)
-      : places.filter((p) => p.station === selectedStation && !p.last_visited);
-
-    if (available.length > 0) {
-      const random = available[Math.floor(Math.random() * available.length)];
-      alert(`추천: ${random.name} (${random.station})`);
-    } else {
-      // 미방문이 없으면 별점 4.0 이상 중 랜덤
-      const highRated = selectedStation === '전체'
-        ? sorted.filter((p) => (p.rating || 0) >= 4.0)
-        : places.filter((p) => p.station === selectedStation && (p.rating || 0) >= 4.0);
-
-      if (highRated.length > 0) {
-        const random = highRated[Math.floor(Math.random() * highRated.length)];
-        alert(`추천: ${random.name} (${random.station})`);
-      } else {
-        alert('추천할 곳이 없습니다.');
-      }
-    }
-  };
-
   return (
     <div className="place-list-container">
       <header className="list-header">
-        <div className="header-title">
-          <h1>Fullmetro</h1>
-          <p>공철의 연금술사</p>
-        </div>
-        <div className="header-actions">
-          <button className="icon-btn" title="검색">🔍</button>
-          <button className="icon-btn" title="메뉴">☰</button>
-        </div>
+        {searchOpen ? (
+          <div className="search-bar">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="맛집 이름 검색"
+              className="search-input"
+            />
+            <button className="icon-btn" title="검색 닫기" onClick={closeSearch}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="header-title">
+              <h1>Fullmetro</h1>
+              <p>공철의 연금술사</p>
+            </div>
+            <div className="header-actions">
+              <button className="icon-btn" title="검색" onClick={() => setSearchOpen(true)}>
+                🔍
+              </button>
+            </div>
+          </>
+        )}
       </header>
 
       <div className="filters">
@@ -115,14 +121,6 @@ export default function PlaceList({ places }: PlaceListProps) {
               ))}
             </select>
           </div>
-
-          <button className="recommend-btn" onClick={handleRecommend}>
-            🎲 추천
-          </button>
-
-          <button className="add-btn" onClick={() => router.push('/add')}>
-            ➕ 등록
-          </button>
         </div>
       </div>
 
@@ -137,6 +135,10 @@ export default function PlaceList({ places }: PlaceListProps) {
           ))}
         </div>
       )}
+
+      <button className="fab-add-btn" onClick={() => router.push('/add')}>
+        ➕ 등록
+      </button>
     </div>
   );
 }

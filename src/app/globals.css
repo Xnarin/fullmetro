@@ -21,6 +21,7 @@ body {
 }
 
 .main-container {
+  position: relative;
   max-width: 480px;
   margin: 0 auto;
   background: #f9fafb;
@@ -129,30 +130,49 @@ body {
   cursor: pointer;
 }
 
-.recommend-btn {
-  padding: 6px 12px;
-  background: #f97316;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: 500;
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
-.add-btn {
-  padding: 6px 12px;
+.search-icon {
+  font-size: 16px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  color: #171717;
+}
+
+.fab-add-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 20px;
+  padding: 14px 20px;
   background: #1e3a8a;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 28px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+  transition: background 0.2s;
+}
+
+.fab-add-btn:hover {
+  background: #1e40af;
 }
 
 .places-grid {
-  padding: 12px 16px;
+  padding: 12px 16px 90px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -300,7 +320,7 @@ body {
 }
 
 .empty-state {
-  padding: 40px 16px;
+  padding: 40px 16px 130px;
   text-align: center;
   color: #6b7280;
 }

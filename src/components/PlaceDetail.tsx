@@ -23,6 +23,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [waitTime, setWaitTime] = useState<number | null>(place.wait_minutes ?? null);
   const [memo, setMemo] = useState(place.memo || '');
   const [isVisited, setIsVisited] = useState(!!place.last_visited);
+  const [visitedToday, setVisitedToday] = useState(false);
 
   const stationMap: Record<string, string> = {
     '김포공항': '✈️',
@@ -35,7 +36,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
 
   const handleVisitToday = () => {
     setIsVisited(true);
-    console.log('방문 체크:', new Date().toISOString().split('T')[0]);
+    setVisitedToday(true);
   };
 
   const handleSave = async () => {
@@ -46,7 +47,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           rating: rating > 0 ? rating : null,
           wait_minutes: waitTime,
           memo: memo || null,
-          last_visited: isVisited ? new Date().toISOString().split('T')[0] : place.last_visited,
+          last_visited: visitedToday ? new Date().toISOString().split('T')[0] : place.last_visited,
         })
         .eq('id', place.id);
 

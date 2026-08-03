@@ -28,6 +28,15 @@ export default function AddPlaceForm() {
     }));
   };
 
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const digitsOnly = value.replace(/[^0-9]/g, '');
+    setFormData((prev) => ({
+      ...prev,
+      [name]: digitsOnly,
+    }));
+  };
+
   const handleTagToggle = (tag: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -169,13 +178,13 @@ export default function AddPlaceForm() {
           <label htmlFor="walk_minutes">도보 분</label>
           <div className="input-with-unit">
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               id="walk_minutes"
               name="walk_minutes"
               value={formData.walk_minutes}
-              onChange={handleInputChange}
+              onChange={handleNumberChange}
               placeholder="0"
-              min="0"
               className="form-input number-input"
             />
             <span className="unit">분</span>
@@ -187,13 +196,13 @@ export default function AddPlaceForm() {
           <label htmlFor="price">1인 가격</label>
           <div className="input-with-unit">
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               id="price"
               name="price"
               value={formData.price}
-              onChange={handleInputChange}
+              onChange={handleNumberChange}
               placeholder="0"
-              min="0"
               className="form-input number-input"
             />
             <span className="unit">원</span>
