@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import PlaceDetail from '@/components/PlaceDetail';
 import { Place } from '@/types/place';
 
+export const dynamic = 'force-dynamic';
+
 interface DetailPageProps {
   params: Promise<{ id: string }>;
 }

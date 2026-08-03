@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import PlaceList from "@/components/PlaceList";
 import { Place } from "@/types/place";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   let places: Place[] = [];
   let error = null;
