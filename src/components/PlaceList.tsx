@@ -11,14 +11,21 @@ interface PlaceListProps {
 
 type StationType = '전체' | '김포공항' | '마곡나루' | '디지털미디어시티' | '홍대입구' | '공덕' | '서울역';
 type PriceRangeType = '전체' | '~1만' | '1~2만' | '2만~';
+type CategoryType = '전체' | '한식' | '카페' | '일식' | '중식' | '양식' | '분식' | '패스트푸드' | '기타';
+type SortType = '별점순' | '가까운순';
 
 const STATIONS: StationType[] = ['전체', '김포공항', '마곡나루', '디지털미디어시티', '홍대입구', '공덕', '서울역'];
 const PRICE_RANGES: PriceRangeType[] = ['전체', '~1만', '1~2만', '2만~'];
+const CATEGORIES: CategoryType[] = ['전체', '한식', '카페', '일식', '중식', '양식', '분식', '패스트푸드', '기타'];
+const SORT_OPTIONS: SortType[] = ['별점순', '가까운순'];
 
 export default function PlaceList({ places }: PlaceListProps) {
   const router = useRouter();
   const [selectedStation, setSelectedStation] = useState<StationType>('전체');
   const [selectedPrice, setSelectedPrice] = useState<PriceRangeType>('전체');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('전체');
+  const [sortBy, setSortBy] = useState<SortType>('별점순');
+  const [visitedOnly, setVisitedOnly] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -47,18 +54,35 @@ export default function PlaceList({ places }: PlaceListProps) {
         if (selectedPrice === '2만~' && price <= 20000) return false;
       }
 
+      // 카테고리 필터
+      if (selectedCategory !== '전체' && place.category !== selectedCategory) {
+        return false;
+      }
+
+      // 다녀온 곳만
+      if (visitedOnly && !place.last_visited) {
+        return false;
+      }
+
       return true;
     });
-  }, [places, searchQuery, selectedStation, selectedPrice]);
+  }, [places, searchQuery, selectedStation, selectedPrice, selectedCategory, visitedOnly]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      // 미방문(null) 맨 뒤, 방문한 것들은 별점 높은 순
+      if (sortBy === '가까운순') {
+        // 도보분 짧은 순, 도보분 미입력은 맨 뒤
+        const aWalk = a.walk_minutes ?? Infinity;
+        const bWalk = b.walk_minutes ?? Infinity;
+        return aWalk - bWalk;
+      }
+
+      // 별점순: 미방문(null) 맨 뒤, 방문한 것들은 별점 높은 순
       const aRating = a.last_visited ? (a.rating || 0) : -1;
       const bRating = b.last_visited ? (b.rating || 0) : -1;
       return bRating - aRating;
     });
-  }, [filtered]);
+  }, [filtered, sortBy]);
 
   return (
     <div className="place-list-container">
@@ -108,6 +132,21 @@ export default function PlaceList({ places }: PlaceListProps) {
 
         <div className="filter-row">
           <div className="filter-group">
+            <label>카테고리</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value as CategoryType)}
+              className="price-filter"
+            >
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
             <label>가격대</label>
             <select
               value={selectedPrice}
@@ -121,6 +160,28 @@ export default function PlaceList({ places }: PlaceListProps) {
               ))}
             </select>
           </div>
+
+          <div className="filter-group">
+            <label>정렬</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortType)}
+              className="price-filter"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className={`filter-btn visited-toggle ${visitedOnly ? 'active' : ''}`}
+            onClick={() => setVisitedOnly(!visitedOnly)}
+          >
+            ✅ 다녀온 곳만
+          </button>
         </div>
       </div>
 

@@ -105,8 +105,13 @@ body {
 
 .filter-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: flex-end;
+}
+
+.visited-toggle {
+  white-space: nowrap;
 }
 
 .filter-group {
