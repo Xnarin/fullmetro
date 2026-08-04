@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Place } from '@/types/place';
@@ -31,6 +31,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [uploadingMenuPhoto, setUploadingMenuPhoto] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [menuPhotoExpanded, setMenuPhotoExpanded] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const menuPhotoInputRef = useRef<HTMLInputElement>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -40,6 +41,24 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     photoUrl ? { url: photoUrl, label: null as string | null } : null,
     menuPhotoUrl ? { url: menuPhotoUrl, label: '메뉴판' } : null,
   ].filter((p): p is { url: string; label: string | null } => p !== null);
+
+  const currentPhoto = photos[photoIndex];
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuPhotoExpanded(false);
+    };
+
+    if (menuPhotoExpanded) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [menuPhotoExpanded]);
 
   const goToPhoto = (index: number) => {
     if (photos.length === 0) return;
@@ -264,9 +283,20 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <img src={photos[photoIndex].url} alt={photos[photoIndex].label || place.name} />
-            {photos[photoIndex].label && (
-              <span className="photo-label-badge">{photos[photoIndex].label}</span>
+            <img src={currentPhoto.url} alt={currentPhoto.label || place.name} />
+            {currentPhoto.label && (
+              <>
+                <span className="photo-label-badge">{currentPhoto.label}</span>
+                <button
+                  type="button"
+                  className="menu-photo-expand-btn"
+                  onClick={() => setMenuPhotoExpanded(true)}
+                  aria-label="메뉴판 크게 보기"
+                  title="메뉴판 크게 보기"
+                >
+                  +
+                </button>
+              </>
             )}
             {photos.length > 1 && (
               <>
@@ -464,6 +494,30 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           </button>
         </div>
       </div>
+
+      {menuPhotoExpanded && menuPhotoUrl && (
+        <div
+          className="menu-photo-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="확대된 메뉴판"
+          onClick={() => setMenuPhotoExpanded(false)}
+        >
+          <button
+            type="button"
+            className="menu-photo-close-btn"
+            onClick={() => setMenuPhotoExpanded(false)}
+            aria-label="메뉴판 닫기"
+          >
+            ×
+          </button>
+          <img
+            src={menuPhotoUrl}
+            alt={`${place.name} 메뉴판`}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
