@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Place } from '@/types/place';
+import { getCategoryStyle } from '@/lib/categoryStyle';
 
 interface PlaceDetailProps {
   place: Place;
@@ -24,6 +25,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [memo, setMemo] = useState(place.memo || '');
   const [isVisited, setIsVisited] = useState(!!place.last_visited);
   const [visitedToday, setVisitedToday] = useState(false);
+  const catStyle = getCategoryStyle(place.category);
 
   const stationMap: Record<string, string> = {
     '김포공항': '✈️',
@@ -122,8 +124,13 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
 
       <div className="detail-content">
         {/* 가게 이미지 영역 */}
-        <div className="detail-image-placeholder">
-          <div className="detail-image-icon">🍽️</div>
+        <div
+          className="detail-image-placeholder"
+          style={{
+            background: `linear-gradient(135deg, ${catStyle.bg} 0%, var(--background) 100%)`,
+          }}
+        >
+          <div className="detail-image-icon">{catStyle.emoji}</div>
         </div>
 
         {/* 기본 정보 */}
@@ -142,7 +149,9 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
             {place.category && (
               <div className="meta-item">
                 <span className="meta-label">카테고리</span>
-                <span className="meta-value">{place.category}</span>
+                <span className="meta-value" style={{ color: catStyle.color, fontWeight: 700 }}>
+                  {catStyle.emoji} {place.category}
+                </span>
               </div>
             )}
             {place.walk_minutes && (
@@ -178,7 +187,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           {place.tags && place.tags.length > 0 && (
             <div className="detail-tags">
               {place.tags.map((tag) => (
-                <span key={tag} className="detail-tag">
+                <span key={tag} className={`detail-tag tag-${tag}`}>
                   {tag === '로컬' && '🏠'}
                   {tag === '느좋' && '✨'}
                   {tag === '블로거' && '📸'}
@@ -206,7 +215,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           </button>
         )}
         {isVisited && (
-          <div className="visit-badge">방문 완료</div>
+          <div className="visit-badge">✅ 방문 완료</div>
         )}
 
         {/* 별점 */}

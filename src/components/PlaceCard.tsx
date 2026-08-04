@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Place } from '@/types/place';
+import { getCategoryStyle } from '@/lib/categoryStyle';
 
 interface PlaceCardProps {
   place: Place;
@@ -18,13 +19,14 @@ const STATION_ICONS: Record<string, string> = {
 
 export default function PlaceCard({ place }: PlaceCardProps) {
   const isVisited = place.last_visited !== null;
+  const catStyle = getCategoryStyle(place.category);
 
   return (
     <Link href={`/detail/${place.id}`} className="place-card-link">
       <div className="place-card">
         <div className="card-header">
-          <div className="card-icon" style={{ backgroundColor: '#1e3a8a' }}>
-            <span style={{ fontSize: '18px' }}>🍽️</span>
+          <div className="card-icon" style={{ backgroundColor: catStyle.bg }}>
+            <span style={{ fontSize: '20px' }}>{catStyle.emoji}</span>
           </div>
           <div className="card-title">
             <h3>{place.name}</h3>
@@ -44,7 +46,12 @@ export default function PlaceCard({ place }: PlaceCardProps) {
 
           <div className="info-row">
             {place.category && (
-              <span className="badge category">{place.category}</span>
+              <span
+                className="badge category"
+                style={{ backgroundColor: catStyle.bg, color: catStyle.color }}
+              >
+                {place.category}
+              </span>
             )}
             {place.price && (
               <span className="badge price">
@@ -57,7 +64,7 @@ export default function PlaceCard({ place }: PlaceCardProps) {
           {place.tags && place.tags.length > 0 && (
             <div className="tags">
               {place.tags.map((tag) => (
-                <span key={tag} className="tag">
+                <span key={tag} className={`tag tag-${tag}`}>
                   {tag === '로컬' && '🏠'}
                   {tag === '느좋' && '✨'}
                   {tag === '블로거' && '📸'}
