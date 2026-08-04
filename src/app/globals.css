@@ -156,8 +156,8 @@ body {
 }
 
 .fab-add-btn {
-  position: absolute;
-  right: 16px;
+  position: fixed;
+  right: max(16px, calc((100vw - 480px) / 2 + 16px));
   bottom: 20px;
   padding: 14px 20px;
   background: #1e3a8a;
