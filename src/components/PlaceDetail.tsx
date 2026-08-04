@@ -175,6 +175,16 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           )}
         </div>
 
+        {/* 카카오맵 */}
+        <a
+          href={`https://map.kakao.com/?q=${encodeURIComponent(place.name)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="kakao-map-btn"
+        >
+          🗺️ 카카오맵에서 보기
+        </a>
+
         {/* 방문 체크 */}
         {!isVisited && (
           <button className="visit-check-btn" onClick={handleVisitToday}>
