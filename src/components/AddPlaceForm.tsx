@@ -13,6 +13,7 @@ interface KakaoSearchResult {
   address: string;
   phone: string | null;
   category: string;
+  walk_minutes: number | null;
 }
 
 export default function AddPlaceForm() {
@@ -60,7 +61,10 @@ export default function AddPlaceForm() {
     setSearchResults([]);
 
     try {
-      const res = await fetch(`/api/kakao-search?query=${encodeURIComponent(formData.name.trim())}`);
+      const params = new URLSearchParams({ query: formData.name.trim() });
+      if (formData.station) params.set('station', formData.station);
+
+      const res = await fetch(`/api/kakao-search?${params.toString()}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -88,6 +92,7 @@ export default function AddPlaceForm() {
       name: result.name,
       address: result.address || prev.address,
       phone: result.phone || prev.phone,
+      walk_minutes: result.walk_minutes != null ? String(result.walk_minutes) : prev.walk_minutes,
     }));
     setSearchResults([]);
   };
@@ -151,6 +156,27 @@ export default function AddPlaceForm() {
       </header>
 
       <form onSubmit={handleSubmit} className="add-form">
+        {/* 역 */}
+        <div className="form-group">
+          <label htmlFor="station" className="label-required">
+            역
+          </label>
+          <select
+            id="station"
+            name="station"
+            value={formData.station}
+            onChange={handleInputChange}
+            className="form-select"
+          >
+            <option value="">역을 선택해주세요</option>
+            {STATIONS.map((station) => (
+              <option key={station} value={station}>
+                {station}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* 이름 */}
         <div className="form-group">
           <label htmlFor="name" className="label-required">
@@ -176,6 +202,9 @@ export default function AddPlaceForm() {
             </button>
           </div>
 
+          {!formData.station && (
+            <p className="search-hint">역을 먼저 선택하면 도보 시간을 자동으로 채워줘요.</p>
+          )}
           {searchError && <p className="search-error">{searchError}</p>}
 
           {searchResults.length > 0 && (
@@ -188,33 +217,15 @@ export default function AddPlaceForm() {
                     onClick={() => handleSelectResult(result)}
                   >
                     <span className="search-result-name">{result.name}</span>
-                    <span className="search-result-address">{result.address}</span>
+                    <span className="search-result-address">
+                      {result.address}
+                      {result.walk_minutes != null && ` · 도보 ${result.walk_minutes}분`}
+                    </span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </div>
-
-        {/* 역 */}
-        <div className="form-group">
-          <label htmlFor="station" className="label-required">
-            역
-          </label>
-          <select
-            id="station"
-            name="station"
-            value={formData.station}
-            onChange={handleInputChange}
-            className="form-select"
-          >
-            <option value="">역을 선택해주세요</option>
-            {STATIONS.map((station) => (
-              <option key={station} value={station}>
-                {station}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* 카테고리 */}
