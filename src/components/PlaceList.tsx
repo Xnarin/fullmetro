@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Place } from '@/types/place';
 import PlaceCard from './PlaceCard';
@@ -28,6 +28,14 @@ export default function PlaceList({ places }: PlaceListProps) {
   const [visitedOnly, setVisitedOnly] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const stationFilterRef = useRef<HTMLDivElement>(null);
+
+  const scrollStations = (direction: 'left' | 'right') => {
+    stationFilterRef.current?.scrollBy({
+      left: direction === 'left' ? -180 : 180,
+      behavior: 'smooth',
+    });
+  };
 
   const closeSearch = () => {
     setSearchOpen(false);
@@ -118,16 +126,34 @@ export default function PlaceList({ places }: PlaceListProps) {
       </header>
 
       <div className="filters">
-        <div className="station-filter">
-          {STATIONS.map((station) => (
-            <button
-              key={station}
-              className={`filter-btn station ${selectedStation === station ? 'active' : ''}`}
-              onClick={() => setSelectedStation(station)}
-            >
-              {station}
-            </button>
-          ))}
+        <div className="station-filter-wrapper">
+          <button
+            type="button"
+            className="station-scroll-btn"
+            onClick={() => scrollStations('left')}
+            aria-label="이전 역 보기"
+          >
+            ‹
+          </button>
+          <div className="station-filter" ref={stationFilterRef}>
+            {STATIONS.map((station) => (
+              <button
+                key={station}
+                className={`filter-btn station ${selectedStation === station ? 'active' : ''}`}
+                onClick={() => setSelectedStation(station)}
+              >
+                {station}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="station-scroll-btn"
+            onClick={() => scrollStations('right')}
+            aria-label="다음 역 보기"
+          >
+            ›
+          </button>
         </div>
 
         <div className="filter-row">

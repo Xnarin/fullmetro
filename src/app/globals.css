@@ -113,10 +113,17 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.station-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
 .station-filter {
   display: flex;
+  flex: 1;
   gap: 8px;
-  margin-bottom: 14px;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: none;
@@ -124,6 +131,25 @@ body {
 
 .station-filter::-webkit-scrollbar {
   display: none;
+}
+
+.station-scroll-btn {
+  width: 28px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.station-scroll-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-dark);
 }
 
 .filter-btn {
