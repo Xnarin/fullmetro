@@ -273,6 +273,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
         body: JSON.stringify({
           image,
           mimeType: menuPhotoResponse.headers.get('content-type') || 'image/jpeg',
+          category: place.category,
         }),
       });
       const data = await res.json();

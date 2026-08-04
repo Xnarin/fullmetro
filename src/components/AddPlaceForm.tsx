@@ -140,7 +140,11 @@ export default function AddPlaceForm() {
       const res = await fetch('/api/gemini-menu-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mimeType: file.type || 'image/jpeg' }),
+        body: JSON.stringify({
+          image: base64,
+          mimeType: file.type || 'image/jpeg',
+          category: formData.category,
+        }),
       });
       const data = await res.json();
 
