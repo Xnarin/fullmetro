@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { MenuItem } from '@/types/place';
 
 const STATIONS = ['김포공항', '마곡나루', '디지털미디어시티', '홍대입구', '공덕', '서울역'];
 const CATEGORIES = ['한식', '카페', '일식', '중식', '양식', '분식', '패스트푸드', '기타'];
@@ -35,7 +36,29 @@ export default function AddPlaceForm() {
   const [analyzingMenu, setAnalyzingMenu] = useState(false);
   const [menuError, setMenuError] = useState('');
   const [menuNote, setMenuNote] = useState('');
+  const [menuPhotoUrl, setMenuPhotoUrl] = useState('');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [mainPhotoUrl, setMainPhotoUrl] = useState('');
+  const [uploadingMainPhoto, setUploadingMainPhoto] = useState(false);
   const menuFileInputRef = useRef<HTMLInputElement>(null);
+  const mainPhotoInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadPlacePhoto = async (file: File, prefix: string): Promise<string> => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from('place-photos').upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from('place-photos').getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const readFileAsBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -109,17 +132,10 @@ export default function AddPlaceForm() {
     setAnalyzingMenu(true);
     setMenuError('');
     setMenuNote('');
+    setMenuItems([]);
 
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(',')[1] || '');
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const base64 = await readFileAsBase64(file);
 
       const res = await fetch('/api/gemini-menu-price', {
         method: 'POST',
@@ -133,19 +149,46 @@ export default function AddPlaceForm() {
         return;
       }
 
+      // 가격을 읽었든 못 읽었든, 사진 자체는 상세보기에서 볼 수 있게 저장해둔다.
+      try {
+        const url = await uploadPlacePhoto(file, 'menu');
+        setMenuPhotoUrl(url);
+      } catch (uploadErr) {
+        console.error('Menu photo upload error:', uploadErr);
+      }
+
+      const items: MenuItem[] = Array.isArray(data.items) ? data.items : [];
+      setMenuItems(items);
+
       if (data.price_per_person == null) {
         setMenuError(data.note || '가격을 읽어내지 못했어요. 직접 입력해주세요.');
         return;
       }
 
       setFormData((prev) => ({ ...prev, price: String(data.price_per_person) }));
-      const itemCount = Array.isArray(data.items) ? data.items.length : 0;
-      setMenuNote(`추정 1인 가격 ${data.price_per_person.toLocaleString()}원을 채웠어요${itemCount ? ` (메뉴 ${itemCount}건 인식)` : ''}.`);
+      setMenuNote(`추정 1인 가격 ${data.price_per_person.toLocaleString()}원을 채웠어요${items.length ? ` (메뉴 ${items.length}건 인식)` : ''}.`);
     } catch (err) {
       console.error('Menu analysis error:', err);
       setMenuError('메뉴 분석 중 오류가 발생했습니다.');
     } finally {
       setAnalyzingMenu(false);
+    }
+  };
+
+  const handleMainPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setUploadingMainPhoto(true);
+    try {
+      const url = await uploadPlacePhoto(file, 'main');
+      setMainPhotoUrl(url);
+    } catch (err) {
+      console.error('Main photo upload error:', err);
+      alert('대표사진 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setUploadingMainPhoto(false);
     }
   };
 
@@ -176,6 +219,9 @@ export default function AddPlaceForm() {
             category: formData.category || null,
             address: formData.address.trim() || null,
             phone: formData.phone.trim() || null,
+            photo_url: mainPhotoUrl || null,
+            menu_photo_url: menuPhotoUrl || null,
+            menu_items: menuItems.length > 0 ? menuItems : null,
             tags: formData.tags.length > 0 ? formData.tags : [],
             walk_minutes: formData.walk_minutes ? parseInt(formData.walk_minutes) : null,
             price: formData.price ? parseInt(formData.price) : null,
@@ -277,6 +323,39 @@ export default function AddPlaceForm() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        {/* 대표사진 */}
+        <div className="form-group">
+          <label>대표사진</label>
+          <input
+            ref={mainPhotoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleMainPhotoChange}
+            style={{ display: 'none' }}
+          />
+          {mainPhotoUrl ? (
+            <div className="photo-preview">
+              <img src={mainPhotoUrl} alt="대표사진" />
+              <button
+                type="button"
+                className="photo-remove-btn"
+                onClick={() => setMainPhotoUrl('')}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="menu-photo-btn"
+              onClick={() => mainPhotoInputRef.current?.click()}
+              disabled={uploadingMainPhoto}
+            >
+              {uploadingMainPhoto ? '📷 업로드 중...' : '📷 대표사진 추가'}
+            </button>
           )}
         </div>
 
@@ -389,7 +468,6 @@ export default function AddPlaceForm() {
             ref={menuFileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={handleMenuFileChange}
             style={{ display: 'none' }}
           />
@@ -404,6 +482,17 @@ export default function AddPlaceForm() {
 
           {menuError && <p className="search-error">{menuError}</p>}
           {menuNote && <p className="search-hint">{menuNote}</p>}
+
+          {menuItems.length > 0 && (
+            <ul className="menu-items-preview">
+              {menuItems.map((item, i) => (
+                <li key={i}>
+                  <span>{item.name}</span>
+                  <span>{item.price != null ? `${item.price.toLocaleString()}원` : ''}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* 메모 */}

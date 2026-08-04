@@ -1,3 +1,8 @@
+export interface MenuItem {
+  name: string;
+  price: number;
+}
+
 export interface Place {
   id: number;
   name: string;
@@ -6,6 +11,8 @@ export interface Place {
   address?: string;
   phone?: string;
   photo_url?: string;
+  menu_photo_url?: string;
+  menu_items?: MenuItem[];
   tags: string[];
   walk_minutes?: number;
   price?: number;

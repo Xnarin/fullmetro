@@ -27,8 +27,32 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [visitedToday, setVisitedToday] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(place.photo_url || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const touchStartXRef = useRef<number | null>(null);
   const catStyle = getCategoryStyle(place.category);
+
+  const photos = [
+    photoUrl ? { url: photoUrl, label: null as string | null } : null,
+    place.menu_photo_url ? { url: place.menu_photo_url, label: '메뉴판' } : null,
+  ].filter((p): p is { url: string; label: string | null } => p !== null);
+
+  const goToPhoto = (index: number) => {
+    if (photos.length === 0) return;
+    setPhotoIndex(Math.max(0, Math.min(photos.length - 1, index)));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current == null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (Math.abs(deltaX) < 40) return;
+    goToPhoto(photoIndex + (deltaX < 0 ? 1 : -1));
+  };
 
   const stationMap: Record<string, string> = {
     '김포공항': '✈️',
@@ -183,9 +207,41 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
 
       <div className="detail-content">
         {/* 가게 이미지 영역 */}
-        {photoUrl ? (
-          <div className="detail-image-placeholder detail-image-photo">
-            <img src={photoUrl} alt={place.name} />
+        {photos.length > 0 ? (
+          <div
+            className="detail-image-placeholder detail-photo-carousel"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img src={photos[photoIndex].url} alt={photos[photoIndex].label || place.name} />
+            {photos[photoIndex].label && (
+              <span className="photo-label-badge">{photos[photoIndex].label}</span>
+            )}
+            {photos.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="carousel-arrow carousel-arrow-prev"
+                  onClick={() => goToPhoto(photoIndex - 1)}
+                  style={{ visibility: photoIndex === 0 ? 'hidden' : 'visible' }}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="carousel-arrow carousel-arrow-next"
+                  onClick={() => goToPhoto(photoIndex + 1)}
+                  style={{ visibility: photoIndex === photos.length - 1 ? 'hidden' : 'visible' }}
+                >
+                  ›
+                </button>
+                <div className="carousel-dots">
+                  {photos.map((_, i) => (
+                    <span key={i} className={`carousel-dot ${i === photoIndex ? 'active' : ''}`} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div
@@ -262,6 +318,21 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
             </div>
           )}
         </div>
+
+        {/* 메뉴 */}
+        {place.menu_items && place.menu_items.length > 0 && (
+          <div className="detail-section">
+            <h2 className="section-title">메뉴</h2>
+            <ul className="menu-items-preview">
+              {place.menu_items.map((item, i) => (
+                <li key={i}>
+                  <span>{item.name}</span>
+                  <span>{item.price != null ? `${item.price.toLocaleString()}원` : ''}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* 카카오맵 */}
         <a
