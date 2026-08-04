@@ -34,7 +34,6 @@ export default function PlaceCard({ place }: PlaceCardProps) {
           </div>
           <div className="card-title">
             <h3>{place.name}</h3>
-            <div className="bookmark-btn" title="찜하기">♡</div>
           </div>
         </div>
 

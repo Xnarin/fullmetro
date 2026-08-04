@@ -244,9 +244,6 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           ←
         </button>
         <div className="detail-header-actions" style={{ position: 'relative' }}>
-          <button className="detail-icon-btn" title="찜하기">
-            ♡
-          </button>
           <input
             ref={photoInputRef}
             type="file"

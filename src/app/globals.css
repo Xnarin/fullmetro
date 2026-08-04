@@ -307,21 +307,6 @@ body {
   white-space: nowrap;
 }
 
-.bookmark-btn {
-  background: none;
-  border: none;
-  font-size: 19px;
-  cursor: pointer;
-  padding: 0;
-  color: var(--text-soft);
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.bookmark-btn:hover {
-  color: var(--accent);
-}
-
 .card-info {
   padding: 10px 14px 8px 70px;
   display: flex;
