@@ -76,6 +76,7 @@ body {
 .header-title p {
   margin: 2px 0 0;
   font-size: 12px;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
   color: var(--text-muted);
 }
 
@@ -289,7 +290,8 @@ body {
 .card-title h3 {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
+  font-weight: 400;
   color: var(--text);
   min-width: 0;
   overflow: hidden;
@@ -463,7 +465,8 @@ body {
 .add-header h1 {
   margin: 0;
   font-size: 17px;
-  font-weight: 600;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
+  font-weight: 400;
   color: var(--text);
 }
 
@@ -796,8 +799,9 @@ body {
 .detail-title-row h1 {
   margin: 0;
   font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -902,7 +906,8 @@ body {
 .section-title {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
+  font-weight: 400;
   color: var(--text);
 }
 
