@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Place } from '@/types/place';
@@ -25,6 +25,9 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [memo, setMemo] = useState(place.memo || '');
   const [isVisited, setIsVisited] = useState(!!place.last_visited);
   const [visitedToday, setVisitedToday] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState(place.photo_url || '');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const catStyle = getCategoryStyle(place.category);
 
   const stationMap: Record<string, string> = {
@@ -83,6 +86,50 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     }
   };
 
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setUploadingPhoto(true);
+
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${place.id}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('place-photos')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Supabase storage error:', uploadError);
+        alert('사진 업로드 중 오류가 발생했습니다.');
+        return;
+      }
+
+      const { data } = supabase.storage.from('place-photos').getPublicUrl(path);
+      const url = data.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('places')
+        .update({ photo_url: url })
+        .eq('id', place.id);
+
+      if (updateError) {
+        console.error('Supabase error:', updateError);
+        alert('사진 저장 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setPhotoUrl(url);
+    } catch (err) {
+      console.error('Photo upload error:', err);
+      alert('사진 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (confirm(`'${place.name}'을(를) 삭제하시겠습니까?`)) {
       try {
@@ -116,22 +163,40 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           <button className="detail-icon-btn" title="찜하기">
             ♡
           </button>
-          <button className="detail-icon-btn" title="더보기">
-            ⋮
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            style={{ display: 'none' }}
+          />
+          <button
+            className="detail-icon-btn"
+            title="사진 추가"
+            onClick={() => photoInputRef.current?.click()}
+            disabled={uploadingPhoto}
+          >
+            {uploadingPhoto ? '⏳' : '⋮'}
           </button>
         </div>
       </header>
 
       <div className="detail-content">
         {/* 가게 이미지 영역 */}
-        <div
-          className="detail-image-placeholder"
-          style={{
-            background: `linear-gradient(135deg, ${catStyle.bg} 0%, var(--background) 100%)`,
-          }}
-        >
-          <div className="detail-image-icon">{catStyle.emoji}</div>
-        </div>
+        {photoUrl ? (
+          <div className="detail-image-placeholder detail-image-photo">
+            <img src={photoUrl} alt={place.name} />
+          </div>
+        ) : (
+          <div
+            className="detail-image-placeholder"
+            style={{
+              background: `linear-gradient(135deg, ${catStyle.bg} 0%, var(--background) 100%)`,
+            }}
+          >
+            <div className="detail-image-icon">{catStyle.emoji}</div>
+          </div>
+        )}
 
         {/* 기본 정보 */}
         <div className="detail-info-section">

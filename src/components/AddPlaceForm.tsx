@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -32,6 +32,10 @@ export default function AddPlaceForm() {
   const [searchResults, setSearchResults] = useState<KakaoSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [analyzingMenu, setAnalyzingMenu] = useState(false);
+  const [menuError, setMenuError] = useState('');
+  const [menuNote, setMenuNote] = useState('');
+  const menuFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -95,6 +99,54 @@ export default function AddPlaceForm() {
       walk_minutes: result.walk_minutes != null ? String(result.walk_minutes) : prev.walk_minutes,
     }));
     setSearchResults([]);
+  };
+
+  const handleMenuFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setAnalyzingMenu(true);
+    setMenuError('');
+    setMenuNote('');
+
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1] || '');
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/gemini-menu-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mimeType: file.type || 'image/jpeg' }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMenuError(data.error || '메뉴 분석 중 오류가 발생했습니다.');
+        return;
+      }
+
+      if (data.price_per_person == null) {
+        setMenuError(data.note || '가격을 읽어내지 못했어요. 직접 입력해주세요.');
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, price: String(data.price_per_person) }));
+      const itemCount = Array.isArray(data.items) ? data.items.length : 0;
+      setMenuNote(`추정 1인 가격 ${data.price_per_person.toLocaleString()}원을 채웠어요${itemCount ? ` (메뉴 ${itemCount}건 인식)` : ''}.`);
+    } catch (err) {
+      console.error('Menu analysis error:', err);
+      setMenuError('메뉴 분석 중 오류가 발생했습니다.');
+    } finally {
+      setAnalyzingMenu(false);
+    }
   };
 
   const handleTagToggle = (tag: string) => {
@@ -332,6 +384,26 @@ export default function AddPlaceForm() {
             />
             <span className="unit">원</span>
           </div>
+
+          <input
+            ref={menuFileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleMenuFileChange}
+            style={{ display: 'none' }}
+          />
+          <button
+            type="button"
+            className="menu-photo-btn"
+            onClick={() => menuFileInputRef.current?.click()}
+            disabled={analyzingMenu}
+          >
+            {analyzingMenu ? '📷 분석 중...' : '📷 메뉴판 사진으로 가격 추출'}
+          </button>
+
+          {menuError && <p className="search-error">{menuError}</p>}
+          {menuNote && <p className="search-hint">{menuNote}</p>}
         </div>
 
         {/* 메모 */}

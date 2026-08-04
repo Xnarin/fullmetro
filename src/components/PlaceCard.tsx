@@ -26,7 +26,11 @@ export default function PlaceCard({ place }: PlaceCardProps) {
       <div className="place-card">
         <div className="card-header">
           <div className="card-icon" style={{ backgroundColor: catStyle.bg }}>
-            <span style={{ fontSize: '20px' }}>{catStyle.emoji}</span>
+            {place.photo_url ? (
+              <img src={place.photo_url} alt={place.name} className="card-icon-photo" />
+            ) : (
+              <span style={{ fontSize: '20px' }}>{catStyle.emoji}</span>
+            )}
           </div>
           <div className="card-title">
             <h3>{place.name}</h3>

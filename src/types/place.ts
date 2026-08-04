@@ -5,6 +5,7 @@ export interface Place {
   category?: string;
   address?: string;
   phone?: string;
+  photo_url?: string;
   tags: string[];
   walk_minutes?: number;
   price?: number;
