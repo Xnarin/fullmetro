@@ -159,6 +159,20 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
                 </span>
               </div>
             )}
+            {place.address && (
+              <div className="meta-item">
+                <span className="meta-label">주소</span>
+                <span className="meta-value">{place.address}</span>
+              </div>
+            )}
+            {place.phone && (
+              <div className="meta-item">
+                <span className="meta-label">전화</span>
+                <span className="meta-value">
+                  <a href={`tel:${place.phone}`}>{place.phone}</a>
+                </span>
+              </div>
+            )}
           </div>
 
           {place.tags && place.tags.length > 0 && (

@@ -8,17 +8,29 @@ const STATIONS = ['김포공항', '마곡나루', '디지털미디어시티', '�
 const CATEGORIES = ['한식', '카페', '일식', '중식', '양식', '분식', '패스트푸드', '기타'];
 const TAGS = ['로컬', '느좋', '블로거'];
 
+interface KakaoSearchResult {
+  name: string;
+  address: string;
+  phone: string | null;
+  category: string;
+}
+
 export default function AddPlaceForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     station: '',
     category: '',
+    address: '',
+    phone: '',
     tags: [] as string[],
     walk_minutes: '',
     price: '',
     memo: '',
   });
+  const [searchResults, setSearchResults] = useState<KakaoSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -35,6 +47,49 @@ export default function AddPlaceForm() {
       ...prev,
       [name]: digitsOnly,
     }));
+  };
+
+  const handleKakaoSearch = async () => {
+    if (!formData.name.trim()) {
+      alert('검색할 가게 이름을 입력해주세요.');
+      return;
+    }
+
+    setSearching(true);
+    setSearchError('');
+    setSearchResults([]);
+
+    try {
+      const res = await fetch(`/api/kakao-search?query=${encodeURIComponent(formData.name.trim())}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSearchError(data.error || '검색 중 오류가 발생했습니다.');
+        return;
+      }
+
+      if (!data.results || data.results.length === 0) {
+        setSearchError('검색 결과가 없습니다.');
+        return;
+      }
+
+      setSearchResults(data.results);
+    } catch (err) {
+      console.error('Kakao search error:', err);
+      setSearchError('검색 중 오류가 발생했습니다.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectResult = (result: KakaoSearchResult) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: result.name,
+      address: result.address || prev.address,
+      phone: result.phone || prev.phone,
+    }));
+    setSearchResults([]);
   };
 
   const handleTagToggle = (tag: string) => {
@@ -62,6 +117,8 @@ export default function AddPlaceForm() {
             name: formData.name.trim(),
             station: formData.station,
             category: formData.category || null,
+            address: formData.address.trim() || null,
+            phone: formData.phone.trim() || null,
             tags: formData.tags.length > 0 ? formData.tags : [],
             walk_minutes: formData.walk_minutes ? parseInt(formData.walk_minutes) : null,
             price: formData.price ? parseInt(formData.price) : null,
@@ -99,15 +156,44 @@ export default function AddPlaceForm() {
           <label htmlFor="name" className="label-required">
             이름
           </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            placeholder="맛집 이름을 입력해주세요"
-            className="form-input"
-          />
+          <div className="input-with-button">
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="맛집 이름을 입력해주세요"
+              className="form-input"
+            />
+            <button
+              type="button"
+              className="kakao-search-btn"
+              onClick={handleKakaoSearch}
+              disabled={searching}
+            >
+              {searching ? '검색중' : '🔍 검색'}
+            </button>
+          </div>
+
+          {searchError && <p className="search-error">{searchError}</p>}
+
+          {searchResults.length > 0 && (
+            <ul className="search-results">
+              {searchResults.map((result, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    className="search-result-item"
+                    onClick={() => handleSelectResult(result)}
+                  >
+                    <span className="search-result-name">{result.name}</span>
+                    <span className="search-result-address">{result.address}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* 역 */}
@@ -148,6 +234,34 @@ export default function AddPlaceForm() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* 주소 */}
+        <div className="form-group">
+          <label htmlFor="address">주소</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            placeholder="검색으로 자동 입력되거나 직접 입력해주세요"
+            className="form-input"
+          />
+        </div>
+
+        {/* 전화번호 */}
+        <div className="form-group">
+          <label htmlFor="phone">전화번호</label>
+          <input
+            type="text"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="검색으로 자동 입력되거나 직접 입력해주세요"
+            className="form-input"
+          />
         </div>
 
         {/* 태그 */}

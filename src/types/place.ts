@@ -3,6 +3,8 @@ export interface Place {
   name: string;
   station: string;
   category?: string;
+  address?: string;
+  phone?: string;
   tags: string[];
   walk_minutes?: number;
   price?: number;
