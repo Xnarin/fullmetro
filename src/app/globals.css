@@ -870,6 +870,41 @@ body {
   color: var(--accent);
 }
 
+.more-menu {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.more-menu-item {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.more-menu-item:last-child {
+  border-bottom: none;
+}
+
+.more-menu-item:hover {
+  background: var(--background);
+}
+
 .detail-content {
   display: flex;
   flex-direction: column;

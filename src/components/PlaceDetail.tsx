@@ -26,15 +26,19 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [isVisited, setIsVisited] = useState(!!place.last_visited);
   const [visitedToday, setVisitedToday] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(place.photo_url || '');
+  const [menuPhotoUrl, setMenuPhotoUrl] = useState(place.menu_photo_url || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingMenuPhoto, setUploadingMenuPhoto] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const menuPhotoInputRef = useRef<HTMLInputElement>(null);
   const touchStartXRef = useRef<number | null>(null);
   const catStyle = getCategoryStyle(place.category);
 
   const photos = [
     photoUrl ? { url: photoUrl, label: null as string | null } : null,
-    place.menu_photo_url ? { url: place.menu_photo_url, label: '메뉴판' } : null,
+    menuPhotoUrl ? { url: menuPhotoUrl, label: '메뉴판' } : null,
   ].filter((p): p is { url: string; label: string | null } => p !== null);
 
   const goToPhoto = (index: number) => {
@@ -110,16 +114,18 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     }
   };
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-
-    setUploadingPhoto(true);
+  const uploadAndSavePhoto = async (
+    file: File,
+    field: 'photo_url' | 'menu_photo_url',
+    prefix: string,
+    setUrl: (url: string) => void,
+    setUploading: (uploading: boolean) => void
+  ) => {
+    setUploading(true);
 
     try {
       const ext = file.name.split('.').pop() || 'jpg';
-      const path = `${place.id}-${Date.now()}.${ext}`;
+      const path = `${place.id}-${prefix}-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('place-photos')
@@ -136,7 +142,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
 
       const { error: updateError } = await supabase
         .from('places')
-        .update({ photo_url: url })
+        .update({ [field]: url })
         .eq('id', place.id);
 
       if (updateError) {
@@ -145,13 +151,27 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
         return;
       }
 
-      setPhotoUrl(url);
+      setUrl(url);
     } catch (err) {
       console.error('Photo upload error:', err);
       alert('사진 업로드 중 오류가 발생했습니다.');
     } finally {
-      setUploadingPhoto(false);
+      setUploading(false);
     }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    uploadAndSavePhoto(file, 'photo_url', 'main', setPhotoUrl, setUploadingPhoto);
+  };
+
+  const handleMenuPhotoOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    uploadAndSavePhoto(file, 'menu_photo_url', 'menu', setMenuPhotoUrl, setUploadingMenuPhoto);
   };
 
   const handleDelete = async () => {
@@ -183,7 +203,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
         <button className="detail-back-btn" onClick={() => router.back()}>
           ←
         </button>
-        <div className="detail-header-actions">
+        <div className="detail-header-actions" style={{ position: 'relative' }}>
           <button className="detail-icon-btn" title="찜하기">
             ♡
           </button>
@@ -194,14 +214,45 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
             onChange={handlePhotoChange}
             style={{ display: 'none' }}
           />
+          <input
+            ref={menuPhotoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleMenuPhotoOnlyChange}
+            style={{ display: 'none' }}
+          />
           <button
             className="detail-icon-btn"
-            title="사진 추가"
-            onClick={() => photoInputRef.current?.click()}
-            disabled={uploadingPhoto}
+            title="더보기"
+            onClick={() => setMoreMenuOpen((v) => !v)}
+            disabled={uploadingPhoto || uploadingMenuPhoto}
           >
-            {uploadingPhoto ? '⏳' : '⋮'}
+            {uploadingPhoto || uploadingMenuPhoto ? '⏳' : '⋮'}
           </button>
+          {moreMenuOpen && (
+            <div className="more-menu">
+              <button
+                type="button"
+                className="more-menu-item"
+                onClick={() => {
+                  setMoreMenuOpen(false);
+                  photoInputRef.current?.click();
+                }}
+              >
+                📷 대표 사진 등록
+              </button>
+              <button
+                type="button"
+                className="more-menu-item"
+                onClick={() => {
+                  setMoreMenuOpen(false);
+                  menuPhotoInputRef.current?.click();
+                }}
+              >
+                🧾 메뉴판 업로드
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
