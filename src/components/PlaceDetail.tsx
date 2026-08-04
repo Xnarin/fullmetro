@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Place } from '@/types/place';
+import { MenuItem, Place } from '@/types/place';
 import { getCategoryStyle } from '@/lib/categoryStyle';
 
 interface PlaceDetailProps {
@@ -27,8 +27,16 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
   const [visitedToday, setVisitedToday] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(place.photo_url || '');
   const [menuPhotoUrl, setMenuPhotoUrl] = useState(place.menu_photo_url || '');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(place.menu_items || []);
+  const [price, setPrice] = useState<number | undefined>(place.price);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingMenuPhoto, setUploadingMenuPhoto] = useState(false);
+  const [analyzingMenu, setAnalyzingMenu] = useState(false);
+  const [menuExtractionComplete, setMenuExtractionComplete] = useState(
+    (place.menu_items?.length || 0) > 0
+  );
+  const [menuError, setMenuError] = useState('');
+  const [menuNote, setMenuNote] = useState('');
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [menuPhotoExpanded, setMenuPhotoExpanded] = useState(false);
@@ -160,7 +168,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     prefix: string,
     setUrl: (url: string) => void,
     setUploading: (uploading: boolean) => void
-  ) => {
+  ): Promise<boolean> => {
     setUploading(true);
 
     try {
@@ -174,7 +182,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
       if (uploadError) {
         console.error('Supabase storage error:', uploadError);
         alert('사진 업로드 중 오류가 발생했습니다.');
-        return;
+        return false;
       }
 
       const { data } = supabase.storage.from('place-photos').getPublicUrl(path);
@@ -188,13 +196,15 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
       if (updateError) {
         console.error('Supabase error:', updateError);
         alert('사진 저장 중 오류가 발생했습니다.');
-        return;
+        return false;
       }
 
       setUrl(url);
+      return true;
     } catch (err) {
       console.error('Photo upload error:', err);
       alert('사진 업로드 중 오류가 발생했습니다.');
+      return false;
     } finally {
       setUploading(false);
     }
@@ -207,11 +217,101 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     uploadAndSavePhoto(file, 'photo_url', 'main', setPhotoUrl, setUploadingPhoto);
   };
 
-  const handleMenuPhotoOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const readFileAsBase64 = (file: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleMenuPhotoOnlyChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    uploadAndSavePhoto(file, 'menu_photo_url', 'menu', setMenuPhotoUrl, setUploadingMenuPhoto);
+
+    setMenuError('');
+    setMenuNote('');
+    const uploaded = await uploadAndSavePhoto(
+      file,
+      'menu_photo_url',
+      'menu',
+      setMenuPhotoUrl,
+      setUploadingMenuPhoto
+    );
+    if (!uploaded) return;
+
+    const { error } = await supabase
+      .from('places')
+      .update({ menu_items: null, price: null })
+      .eq('id', place.id);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      setMenuError('기존 메뉴 정보 초기화 중 오류가 발생했습니다.');
+      return;
+    }
+
+    setMenuItems([]);
+    setPrice(undefined);
+    setMenuExtractionComplete(false);
+  };
+
+  const handleMenuExtraction = async () => {
+    if (!menuPhotoUrl) return;
+    setAnalyzingMenu(true);
+    setMenuError('');
+    setMenuNote('');
+    try {
+      const menuPhotoResponse = await fetch(menuPhotoUrl);
+      if (!menuPhotoResponse.ok) throw new Error('Unable to read menu photo');
+
+      const image = await readFileAsBase64(await menuPhotoResponse.blob());
+      const res = await fetch('/api/gemini-menu-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image,
+          mimeType: menuPhotoResponse.headers.get('content-type') || 'image/jpeg',
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMenuError(data.error || '메뉴 분석 중 오류가 발생했습니다.');
+        return;
+      }
+
+      const items: MenuItem[] = Array.isArray(data.items) ? data.items : [];
+      const pricePerPerson = typeof data.price_per_person === 'number' ? data.price_per_person : null;
+      const { error } = await supabase
+        .from('places')
+        .update({
+          menu_items: items.length > 0 ? items : null,
+          ...(pricePerPerson != null ? { price: pricePerPerson } : {}),
+        })
+        .eq('id', place.id);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        setMenuError('분석 결과 저장 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setMenuItems(items);
+      if (pricePerPerson != null) setPrice(pricePerPerson);
+      setMenuExtractionComplete(true);
+      setMenuNote(
+        pricePerPerson != null
+          ? `대표 메뉴 ${items.length}개와 1인 예상 가격 ${pricePerPerson.toLocaleString()}원을 저장했어요.`
+          : data.note || '대표 메뉴를 저장했어요.'
+      );
+    } catch (err) {
+      console.error('Menu analysis error:', err);
+      setMenuError('메뉴 분석 중 오류가 발생했습니다.');
+    } finally {
+      setAnalyzingMenu(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -262,9 +362,9 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
             className="detail-icon-btn"
             title="더보기"
             onClick={() => setMoreMenuOpen((v) => !v)}
-            disabled={uploadingPhoto || uploadingMenuPhoto}
+            disabled={uploadingPhoto || uploadingMenuPhoto || analyzingMenu}
           >
-            {uploadingPhoto || uploadingMenuPhoto ? '⏳' : '⋮'}
+            {uploadingPhoto || uploadingMenuPhoto || analyzingMenu ? '⏳' : '⋮'}
           </button>
           {moreMenuOpen && (
             <div className="more-menu">
@@ -286,7 +386,7 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
                   menuPhotoInputRef.current?.click();
                 }}
               >
-                🧾 메뉴판 업로드
+                🧾 메뉴판 등록
               </button>
             </div>
           )}
@@ -380,11 +480,11 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
                 <span className="meta-value">약 {place.walk_minutes}분</span>
               </div>
             )}
-            {place.price && (
+            {price && (
               <div className="meta-item">
                 <span className="meta-label">가격</span>
                 <span className="meta-value">
-                  {place.price.toLocaleString()}원{place.category !== '카페' ? '/인' : ''}
+                  {price.toLocaleString()}원{place.category !== '카페' ? '/인' : ''}
                 </span>
               </div>
             )}
@@ -419,17 +519,31 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
         </div>
 
         {/* 메뉴 */}
-        {place.menu_items && place.menu_items.length > 0 && (
+        {(menuPhotoUrl || menuItems.length > 0 || menuError || menuNote) && (
           <div className="detail-section">
             <h2 className="section-title">메뉴</h2>
-            <ul className="menu-items-preview">
-              {place.menu_items.map((item, i) => (
-                <li key={i}>
-                  <span>{item.name}</span>
-                  <span>{item.price != null ? `${item.price.toLocaleString()}원` : ''}</span>
-                </li>
-              ))}
-            </ul>
+            {menuPhotoUrl && !menuExtractionComplete && (
+              <button
+                type="button"
+                className="menu-photo-btn"
+                onClick={handleMenuExtraction}
+                disabled={analyzingMenu}
+              >
+                {analyzingMenu ? '✨ 메뉴판 분석 중...' : '✨ 메뉴판 추출'}
+              </button>
+            )}
+            {menuError && <p className="search-error">{menuError}</p>}
+            {menuNote && <p className="search-hint">{menuNote}</p>}
+            {menuItems.length > 0 && (
+              <ul className="menu-items-preview">
+                {menuItems.map((item, i) => (
+                  <li key={i}>
+                    <span>{item.name}</span>
+                    <span>{item.price != null ? `${item.price.toLocaleString()}원` : ''}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

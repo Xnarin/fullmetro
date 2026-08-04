@@ -5,6 +5,7 @@ const PROMPT = `이 이미지는 식당 메뉴판이다. 메뉴판을 읽고 1�
 {"price_per_person": 숫자 또는 null, "items": [{"name": "메뉴명", "price": 숫자}], "note": "간단한 설명"}
 
 - price_per_person은 1인분 기준으로 가장 대표적인(일반적으로 주문하는) 메뉴 가격을 원 단위 정수로 추정해라.
+- items에는 식당의 대표 메인 메뉴만 중요도 순으로 최대 5개 넣어라. 밑반찬, 음료, 주류, 세트 구성의 선택 항목, 추가 토핑 등 사이드 메뉴는 제외해라.
 - 이미지가 메뉴판이 아니거나 가격을 읽을 수 없으면 price_per_person을 null로 하고 note에 이유를 적어라.`;
 
 export async function POST(request: NextRequest) {
@@ -73,8 +74,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const parsed = JSON.parse(text);
-    return NextResponse.json(parsed);
+    const parsed: { items?: unknown[]; [key: string]: unknown } = JSON.parse(text);
+    const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+    const items = rawItems
+          .filter(
+            (item): item is { name: string; price: number } =>
+              typeof item === 'object' &&
+              item !== null &&
+              typeof (item as { name?: unknown }).name === 'string' &&
+              Number.isFinite((item as { price?: unknown }).price)
+          )
+          .slice(0, 5)
+          .map((item) => ({ name: item.name.trim(), price: Math.round(item.price) }))
+
+    return NextResponse.json({ ...parsed, items });
   } catch (err) {
     console.error("Gemini menu price error:", err);
     return NextResponse.json(
