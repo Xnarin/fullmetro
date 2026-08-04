@@ -108,6 +108,27 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
     }
   };
 
+  const handleVisitCancel = async () => {
+    try {
+      const { error } = await supabase
+        .from('places')
+        .update({ last_visited: null })
+        .eq('id', place.id);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        alert('방문 취소 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setIsVisited(false);
+      setVisitedToday(false);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('방문 취소 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleSave = async () => {
     try {
       const { error } = await supabase
@@ -432,7 +453,14 @@ export default function PlaceDetail({ place }: PlaceDetailProps) {
           </button>
         )}
         {isVisited && (
-          <div className="visit-badge">✅ 방문 완료</div>
+          <button
+            type="button"
+            className="visit-badge visit-cancel-btn"
+            onClick={handleVisitCancel}
+            title="잘못 눌렀다면 다시 눌러 방문을 취소하세요"
+          >
+            ✅ 방문 완료 · 다시 누르면 취소
+          </button>
         )}
 
         {/* 별점 */}
