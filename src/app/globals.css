@@ -508,6 +508,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .label-required::after {
@@ -568,8 +569,13 @@ body {
   gap: 8px;
 }
 
+.input-with-button {
+  min-width: 0;
+}
+
 .input-with-button .form-input {
   flex: 1;
+  min-width: 0;
 }
 
 .kakao-search-btn {
@@ -665,15 +671,18 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .search-result-address {
   font-size: 12px;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 .number-input {
   flex: 1;
+  min-width: 0;
 }
 
 .unit {
