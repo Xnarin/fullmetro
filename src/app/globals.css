@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf8f3;
-  --foreground: #2b2320;
+  --background: #f4f6f9;
+  --foreground: #1a2433;
 
   --surface: #ffffff;
-  --border: #ece4d8;
-  --border-strong: #e3d9c9;
-  --text: #2b2320;
-  --text-muted: #8a7f71;
-  --text-soft: #b3a99b;
+  --border: #e2e7ee;
+  --border-strong: #cbd5e1;
+  --text: #1a2433;
+  --text-muted: #64748b;
+  --text-soft: #99a5b5;
 
-  --primary: #22314f;
-  --primary-dark: #182339;
+  --primary: #10233d;
+  --primary-dark: #071426;
 
-  --accent: #f0562a;
-  --accent-dark: #d6431a;
-  --accent-soft: #fde7de;
+  --accent: #0284c7;
+  --accent-dark: #026aa3;
+  --accent-soft: #e0f2fe;
 
-  --success-bg: #e4f3e6;
-  --success: #2f6b3f;
-  --danger-bg: #fbe3e1;
-  --danger: #b23b2e;
+  --success-bg: #e2f3ee;
+  --success: #157359;
+  --danger-bg: #fbe3e6;
+  --danger: #b3364f;
 
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 3px rgba(43, 35, 32, 0.07);
-  --shadow-md: 0 6px 20px rgba(43, 35, 32, 0.1);
-  --shadow-lg: 0 10px 30px rgba(43, 35, 32, 0.18);
+  --shadow-sm: 0 1px 3px rgba(16, 30, 51, 0.06);
+  --shadow-md: 0 6px 20px rgba(16, 30, 51, 0.09);
+  --shadow-lg: 0 10px 28px rgba(16, 30, 51, 0.16);
 }
 
 @theme inline {
@@ -67,8 +67,8 @@ body {
 .header-title h1 {
   margin: 0;
   font-size: 25px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--primary);
 }
 
@@ -145,7 +145,7 @@ body {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
   box-shadow: var(--shadow-sm);
 }
 
@@ -169,9 +169,9 @@ body {
 .filter-group label {
   font-size: 11px;
   color: var(--text-muted);
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .price-filter {
@@ -221,7 +221,7 @@ body {
   border: none;
   border-radius: var(--radius-pill);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-lg);
   z-index: 20;
@@ -288,7 +288,7 @@ body {
 .card-title h3 {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
   min-width: 0;
   overflow: hidden;
@@ -330,23 +330,24 @@ body {
   background: var(--border);
   border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .badge.station {
   background: #e7ecf5;
   color: var(--primary);
+  font-weight: 600;
 }
 
 .badge.category {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .badge.price {
   background: var(--success-bg);
   color: var(--success);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tags {
@@ -405,7 +406,7 @@ body {
 }
 
 .rating-score {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary);
   margin-left: 4px;
 }
@@ -422,13 +423,13 @@ body {
   border-radius: var(--radius-pill);
   font-size: 11px;
   color: var(--accent-dark);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .not-visited {
   font-size: 13px;
   color: var(--text-soft);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .empty-state {
@@ -461,7 +462,7 @@ body {
 .add-header h1 {
   margin: 0;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -504,13 +505,13 @@ body {
 
 .label-group {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .form-group > label:not(.label-group) {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -621,7 +622,7 @@ body {
 
 .search-result-name {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -637,7 +638,7 @@ body {
 .unit {
   font-size: 14px;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .checkbox-group {
@@ -679,7 +680,7 @@ body {
   border: none;
   border-radius: var(--radius-md);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: background 0.15s, transform 0.15s;
@@ -794,8 +795,8 @@ body {
 .detail-title-row h1 {
   margin: 0;
   font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 
@@ -814,10 +815,10 @@ body {
 }
 
 .meta-label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   min-width: 52px;
   flex-shrink: 0;
@@ -831,7 +832,7 @@ body {
 
 .meta-value a {
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -871,7 +872,7 @@ body {
   border: none;
   border-radius: var(--radius-md);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: background 0.15s;
@@ -887,7 +888,7 @@ body {
   color: var(--success);
   border-radius: var(--radius-md);
   text-align: center;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
 }
 
@@ -900,7 +901,7 @@ body {
 .section-title {
   margin: 0;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -936,7 +937,7 @@ body {
 
 .rating-display {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--primary);
   min-width: 40px;
   text-align: center;
@@ -969,7 +970,7 @@ body {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .detail-memo {
@@ -1008,7 +1009,7 @@ body {
   border: none;
   border-radius: var(--radius-md);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
