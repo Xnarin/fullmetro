@@ -67,8 +67,9 @@ body {
 .header-title h1 {
   margin: 0;
   font-size: 25px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--font-mapo), var(--font-geist-sans), sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   color: var(--primary);
 }
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import BfcacheReload from "@/components/BfcacheReload";
 
@@ -11,6 +12,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const mapoGoldenPier = localFont({
+  src: "./fonts/MapoGoldenPier.ttf",
+  variable: "--font-mapo",
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${mapoGoldenPier.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <BfcacheReload />
